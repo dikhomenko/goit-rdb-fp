@@ -110,3 +110,26 @@ ADD COLUMN `year_difference` INT;
 
 UPDATE infectious_cases
 SET year_difference = TIMESTAMPDIFF(YEAR, start_of_year, current_date);
+
+-- 5 Побудуйте власну функцію. Створіть і використайте функцію, що будує такий же атрибут,
+-- як і в попередньому завданні: функція має приймати на вхід значення року,
+-- а повертати різницю в роках між поточною датою та датою, створеною з атрибута року
+-- (1996 рік → ‘1996-01-01’).
+
+DELIMITER //
+CREATE FUNCTION get_year_diff(input_year INT) 
+RETURNS INT 
+DETERMINISTIC
+BEGIN
+    DECLARE start_date DATE;
+    DECLARE year_diff INT;
+    SET start_date = STR_TO_DATE(CONCAT(input_year, '-01-01'), '%Y-%m-%d');
+    SET year_diff = TIMESTAMPDIFF(YEAR, start_date, CURDATE());
+    RETURN year_diff;
+END //
+DELIMITER ;
+
+SELECT 
+    Year, 
+    get_year_diff(Year) AS year_difference
+FROM infectious_cases

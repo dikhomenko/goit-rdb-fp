@@ -72,3 +72,41 @@ GROUP BY ic.country_id
 ORDER BY max_number_rabies DESC
 LIMIT 10;
 
+-- 4 Побудуйте колонку різниці в роках. Для оригінальної або нормованої таблиці
+-- для колонки Year побудуйте з використанням вбудованих SQL-функцій:
+
+-- 4.1 атрибут, що створює дату першого січня відповідного року:
+
+DELIMITER //
+CREATE PROCEDURE add_column_if_not_exists()
+BEGIN
+    IF NOT EXISTS (
+        SELECT * 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = 'infectious_cases' 
+          AND COLUMN_NAME = 'start_of_year'
+    ) THEN
+        ALTER TABLE infectious_cases 
+        ADD COLUMN start_of_year DATE;
+    END IF;
+END //
+DELIMITER ;
+
+UPDATE infectious_cases
+SET start_of_year = STR_TO_DATE(CONCAT(Year, '-01-01'), '%Y-%m-%d');
+
+-- 4.2 атрибут, що дорівнює поточній даті:
+
+ALTER TABLE infectious_cases
+ADD COLUMN `current_date` DATE;
+
+UPDATE infectious_cases
+SET `current_date` = CURDATE();
+
+-- 4.3 атрибут, що дорівнює різниці в роках двох вищезгаданих колонок:
+
+ALTER TABLE infectious_cases
+ADD COLUMN `year_difference` INT;
+
+UPDATE infectious_cases
+SET year_difference = TIMESTAMPDIFF(YEAR, start_of_year, current_date);
